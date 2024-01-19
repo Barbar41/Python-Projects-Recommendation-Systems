@@ -1,6 +1,6 @@
-#############################
+#################
 # Model-Based Collaborative Filtering: Matrix Factorization
-#############################
+#################
 
 # !pip install surprise
 import pandas as pd
@@ -8,120 +8,119 @@ from surprise import Reader, SVD, Dataset, accuracy
 from surprise.model_selection import GridSearchCV, train_test_split, cross_validate
 pd.set_option('display.max_columns', None)
 
-# Adım 1: Veri Setinin Hazırlanması
-# Adım 2: Modelleme
-# Adım 3: Model Tuning
-# Adım 4: Final Model ve Tahmin
+# Step 1: Preparing the Data Set
+# Step 2: Modeling
+# Step 3: Model Tuning
+# Step 4: Final Model and Prediction
 
-#############################
-# Adım 1: Veri Setinin Hazırlanması
-#############################
+#################
+# Step 1: Preparing the Data Set
+#################
 
-movie = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/movie.csv')
-rating = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/rating.csv')
+movie = pd.read_csv('Recommendation Systems/datasets/movie_lens_dataset/movie.csv')
+rating = pd.read_csv('Recommendation Systems/datasets/movie_lens_dataset/rating.csv')
 df = movie.merge(rating, how="left", on="movieId")
 
-# Takip edilebilirlik acısından 4 fılm 4 fılm ıdsi.
+# In terms of traceability, 4 movies and 4 movie IDs.
 movie_ids=[130219, 356, 4422,541]
 movies = ["The Dark Knight (2011)",
-          "Cries and Whispers (Viskningar och rop) (1972)",
-          "Forrest Gump (1994)",
-          "Blade Runner (1982)"]
+           "Cries and Whispers (Viskningar och rop) (1972)",
+           "Forrest Gump (1994)",
+           "Blade Runner (1982)"]
 
-# Buradaki idlere göre bir veri seti olusuturuyoruz.
+# We create a data set according to the ids here.
 sample_df=df[df.movieId.isin(movie_ids)]
 sample_df.head()
 
 sample_df.shape
 
-# Bunlar üzerinden df mizi olusturuyoruz.
+# We create our df through these.
 user_movie_df=sample_df.pivot_table(index=["userId"],
-                                    columns=["title"],
-                                    values=["rating"])
+                                     columns=["title"],
+                                     values=["rating"])
 user_movie_df.shape
 
-# Bilgilendirme girişi yapıyoruz.
+# We are making an information entry.
 reader= Reader(rating_scale=(1,5))
 
-# Suprise kutuphanesinin istediği veri formatına kendi verimizi getirdik.
+# We brought our own data to the data format requested by the Suprise library.
 data = Dataset.load_from_df(sample_df[['userId',
-                                       'movieId',
-                                       'rating']], reader)
-##############################
-# Adım 2: Modelleme
-##############################
-# Veriyi Bölüyoruz.
+                                        'movieId',
+                                        'rating']], reader)
+#################
+# Step 2: Modeling
+#################
+# We Divide the Data.
 trainset, testset = train_test_split(data, test_size=.25)
 
-# Model nesnesi oluşturuldu
+# Model object created
 svd_model=SVD()
 
-# Fit edip modeli kuruyoruz.Matrix factorization yöntemiyle oluşturulmus model var.
+# We fit and build the model. There is a model created with the matrix factorization method.
 svd_model.fit(trainset)
 
-# Testset üzerinde bunu kullanalım
+# Let's use this on Testset
 predictions = svd_model.test(testset)
 
-# Accuracy import ile ogrenebiliriz.Hata farkımızı bulacagız.
+# We can learn with Accuracy import. We will find the error difference.
 accuracy.rmse(predictions)
 
-# Bir tane kullanıcı için bir tahminde bulunalım.
+# Let's make a prediction for one user.
 svd_model.predict(uid=1.0, iid=541, verbose=True)
 
 svd_model.predict(uid=1.0, iid=356, verbose=True)
 
-# Birinci kullanıcı seçimi için
+# For first user selection
 sample_df[sample_df["userId"]==1]
 
-# Bu şeklilde istediğimiz herhangi bir kullanıcının Idsini ve film idsini girdiğimizde;
-# Kullanıcıların bu filmi izlediklerinde kaç puaan verebileceklerini elde etmiş oalcagız.
+# In this way, when we enter the ID and movie ID of any user we want;
+# We will obtain how many points users can give when they watch this movie.
 
 
-##############################
-# Adım 3: Model Tuning
-##############################
-# MODEL OPTİMİZE ETMEK MODELİN TAHMİN PERFORMANSINI ARTTIRMAYA ÇALIŞMAKTIR.
-# Modelin hiperparametrelerinin(kullanıcı tarafından belirlenen)nasıl optimize edeceğimiz.
+#################
+# Step 3: Model Tuning
+#################
+# OPTIMIZING THE MODEL IS TRYING TO INCREASE THE PREDICTION PERFORMANCE OF THE MODEL.
+# How to optimize the model's hyperparameters (specified by the user).
 
-# İterasyon sayısı ve epochs sayısılarını kombine ederek parametre seti girdileri ile modeli sınayabiliriz.
+# By combining the number of iterations and the number of epochs, we can test the model with parameter set inputs.
 
 param_grid = {'n_epochs': [5, 10, 20],
-              'lr_all': [0.002, 0.005, 0.007]}
+               'lr_all': [0.002, 0.005, 0.007]}
 
-# Method çağırırıyoruz.
-gs = GridSearchCV(SVD, #matrix factorization method kullanacak
-                  param_grid, # parametre olculerı kullanacak(kişiselleştirilebilir)
-                  measures=['rmse', 'mae'],# gercek degerler ıle tahmın edılen degerlerın farklarının karelerının ortalamasını al yada bu ortalamanın karekökünü al
-                  cv=3,# çapraz dogrulama(veri setini 3 e böl 1 parçasıyla test 2 parcasıyla model kur.ve kombine et(kombinle) sonra ortalamasını al
-                  n_jobs=-1,# full performans cpu kullan
-                  joblib_verbose=True) # o sırada raporlama yap
+# We call the method.
+gs = GridSearchCV(SVD will use #matrix factorization method
+                   param_grid, # will use parameter metrics (customizable)
+                   measures=['rmse', 'mae'],# take the average of the squares of the differences between the actual values and the predicted values, or take the square root of this average
+                   cv=3,# cross validation (divide the data set into 3, build a model with 1 piece and test 2 pieces and combine them, then take the average
+                   n_jobs=-1,# use full performance cpu
+                   joblib_verbose=True) # report at that time
 
 gs.fit(data)
 
 gs.best_score["rmse"]
 gs.best_params["rmse"]
 
-##############################
-# Adım 4: Final Model ve Tahmin
-##############################
+#################
+# Step 4: Final Model and Prediction
+#################
 
 
-# svd model nesnesı cagıralım
+# call svd model object
 dir(svd_model)
 
-# n_epochs cagıralım
+# let's call n_epochs
 svd_model.n_epochs
 
-# Modeli yeni değerleri ile oluşturmak
+# Create the model with new values
 svd_model = SVD(**gs.best_params['rmse'])
 
-# Bütün veriyi gösterelim.Full train sete cevırdık.
-# Hata oranımızı görduk hiperparametrenın en ıyı degerlenı bulduk.Bu degerlere göre model nesnesını olusturduk.
+# Let's show all the data. We turned it into a full train set.
+# We saw our error rate and found the best values of the hyperparameter. We created the model object according to these values.
 
 data = data.build_full_trainset()
 svd_model.fit(data)
 
-# Tahmın modeli isteyelim.
+# Let's ask for the model of the prediction.
 svd_model.predict(uid=1.0, iid=541, verbose=True)
-# Blade Runner filmi için 4 deger verılmıs bız 4.20 bulduk cok ıyı degıl ama kotude degıl %20 tartısmaya acık
-
+# Blade Runner movie was given a rating of 4, we found it to be 4.20, not very good but not bad, 20% is open to discussion.

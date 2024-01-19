@@ -1,102 +1,102 @@
-###############
+#################
 # Association RuleBased Recommender System
 ##############
 
-# İş Problemi:
-# Türkiye’nin en büyük online hizmet platformu olan Armut, hizmet verenler ile hizmet almak isteyenleri buluşturmaktadır.
-# Bilgisayarın veya akıllı telefonunun üzerinden birkaç dokunuşla temizlik, tadilat, nakliyat gibi hizmetlere kolayca
-# ulaşılmasını sağlamaktadır.
-# Hizmet alan kullanıcıları ve bu kullanıcıların almış oldukları servis ve kategorileri içeren veri setini kullanarak Association
-# Rule Learning ile ürün tavsiye sistemi oluşturulmak istenmektedir.
+# Business Problem:
+# Armut, Turkey's largest online service platform, brings together service providers and those who want to receive service.
+# You can easily access services such as cleaning, renovation and transportation with a few taps on your computer or smartphone.
+# provides access.
+# Using the data set containing service users and the services and categories these users receive, Association
+# It is desired to create a product recommendation system with Rule Learning.
 ##############
-# Veri Seti Hikayesi
-#############
-# Veri seti müşterilerin aldıkları servislerden ve bu servislerin kategorilerinden oluşmaktadır.Alınan her hizmetin tarih ve saat bilgisini içermektedir.
-# 4 Değişken 162.523 Gözlem 5 MB
-# UserId--Müşteri numarası
-# ServiceId--Her kategoriye ait anonimleştirilmiş servislerdir. (Örnek : Temizlik kategorisi altında koltuk yıkama servisi)
-# Bir ServiceId farklı kategoriler altında bulanabilir ve farklı kategoriler altında farklı servisleri ifade eder.
-# (Örnek: CategoryId’si 7 ServiceId’si 4 olan hizmet petek temizliği iken CategoryId’si 2 ServiceId’si 4 olan hizmet mobilya montaj)
-# CategoryId--Anonimleştirilmiş kategorilerdir. (Örnek : Temizlik, nakliyat, tadilat kategorisi)
-# CreateDate--Hizmetin satın alındığı tarih
+# Dataset Story
+##############
+# The data set consists of the services received by customers and the categories of these services. It contains the date and time information of each service received.
+#4 Variable 162,523 Observations 5 MB
+# UserId--Customer number
+# ServiceId--Anonymized services belonging to each category. (Example: Sofa washing service under the cleaning category)
+# A ServiceId can be found under different categories and represents different services under different categories.
+# (Example: The service with CategoryId 7 and ServiceId 4 is radiator cleaning, while the service with CategoryId 2 and ServiceId 4 is furniture assembly)
+# CategoryId--Anonymized categories. (Example: Cleaning, transportation, renovation category)
+# CreateDate--The date the service was purchased
 
 
-###########################################
-# GÖREV 1--Veriyi Hazırlama
-###########################################
+#######################
+# TASK 1--Preparing the Data
+#######################
 import pandas as pd
 pd.set_option('display.max_columns', None)
 from mlxtend.frequent_patterns import apriori, association_rules
 pd.set_option('display.expand_frame_repr', False)
 
 
-# Adım 1:armut_data.csv dosyasını okutunuz
-df_ = pd.read_csv(r"Tavsiye Sistemleri/Miuul-Ödev/armut_data.csv")
+# Step 1: Read the armut_data.csv file
+df_ = pd.read_csv(r"Recommendation Systems/Miuul-Homework/armut_data.csv")
 df = df_.copy()
 df.describe().T
 df.head()
 
 
-# Adım 2:ServisID her bir CategoryID özelinde farklı bir hizmeti temsil etmektedir.
-# ServiceID ve CategoryID’yi "_" ile birleştirerek bu hizmetleri temsil edecek yeni bir değişken oluşturunuz.
-# Elde edilmesi gereken çıktı:
+# Step 2: ServiceID represents a different service for each CategoryID.
+# Create a new variable to represent these services by combining ServiceID and CategoryID with "_".
+# Output to be obtained:
 
-# UserId ServiceId CategoryId    CreateDate    Hizmet
-#  25446     4          5     6.08.2017 16:11    4_5
-#  22948    48          5     6.08.2017 16:12   48_5
-#  10618     0          8     6.08.2017 16:13    0_5
-#   7256     9          4     6.08.2017 16:14    9_4
-#  25446    48          5     6.08.2017 16:16   48_5
+# UserId ServiceId CategoryId CreateDate Service
+# 25446 4 5 6.08.2017 16:11 4_5
+# 22948 48 5 6.08.2017 16:12 48_5
+# 10618 0 8 6.08.2017 16:13 0_5
+# 7256 9 4 6.08.2017 16:14 9_4
+# 25446 48 5 6.08.2017 16:16 48_5
 
-df["Hizmet"] = [str(row[1]) + "_" + str(row[2]) for row in df.values]
+df["Service"] = [str(row[1]) + "_" + str(row[2]) for row in df.values]
 df.head()
 
 
-# Adım 3:Veri seti hizmetlerin alındığı tarih ve saatten oluşmaktadır, herhangi bir sepet tanımı (fatura vb. ) bulunmamaktadır. Association Rule Learning uygulayabilmek için bir sepet (fatura vb.) tanımı oluşturulması gerekmektedir.
-# Burada sepet tanımı her bir müşterinin aylık aldığı hizmetlerdir.
-# Örneğin; 25446 id'li müşteri 2017'in 8.ayında aldığı 4_5, 48_5, 6_7, 47_7 hizmetler bir sepeti; 2017'in 9.ayında aldığı 17_5, 14_7 hizmetler başka bir sepeti ifade etmektedir.
-# Sepetleri unique bir ID ile tanımlanması gerekmektedir. Bunun için öncelikle sadece yıl ve ay içeren yeni bir date değişkeni oluşturunuz.
-# UserID ve yeni oluşturduğunuz date değişkenini "_" ile birleştirirek ID adında yeni bir değişkene atayınız. Elde edilmesi gereken çıktı:
+# Step 3: The data set consists of the date and time the services were received, there is no basket definition (invoice, etc.). In order to apply Association Rule Learning, a basket (invoice, etc.) definition must be created.
+# Here, the basket definition is the services that each customer receives monthly.
+# For example; The customer with ID 25446 received a basket of 4_5, 48_5, 6_7, 47_7 services in the 8th month of 2017; The 17_5 and 14_7 services received in the 9th month of 2017 represent another basket.
+# Carts must be identified with a unique ID. To do this, first create a new date variable that contains only the year and month.
+# Combine UserID and the date variable you just created with "_" and assign it to a new variable called ID. The output you should get is:
 
-# UserId    ServiceId   CategoryId     CreateDate       Hizmet   New_Date    SepetID
-# 25446        4            5        6.08.2017 16:11     4_5     2017-08    25446_2017-08
-# 22948       48            5        6.08.2017 16:12    48_5     2017-08    22948_2017-08
-# 10618        0            8        6.08.2017 16:13     0_5     2017-08    10618_2017-08
-# 7256         9            4        6.08.2017 16:14     9_4     2017-08     7256_2017-08
-# 25446       48            5        6.08.2017 16:16    48_5     2017-08    25446_2017-08
+# UserId ServiceId CategoryId CreateDate Service New_Date CartID
+# 25446 4 5 6.08.2017 16:11 4_5 2017-08 25446_2017-08
+# 22948 48 5 6.08.2017 16:12 48_5 2017-08 22948_2017-08
+# 10618 0 8 6.08.2017 16:13 0_5 2017-08 10618_2017-08
+# 7256 9 4 6.08.2017 16:14 9_4 2017-08 7256_2017-08
+# 25446 48 5 6.08.2017 16:16 48_5 2017-08 25446_2017-08
 
 df.info()
 df["CreateDate"]= pd.to_datetime(df["CreateDate"])
 df["NEW_DATE"]= df["CreateDate"].dt.strftime("%Y-%m")
 df.head(5)
 
-df["SepetID"]= [str(row[0])+ "_"+ str(row[5]) for row in df.values]
+df["CartID"]= [str(row[0])+ "_"+ str(row[5]) for row in df.values]
 df.head()
 
 
-###########################################
-# Görev 2: Birliktelik Kuralları Üretiniz ve Öneride bulununuz
-###########################################
+#######################
+# Task 2: Create Association Rules and Make Suggestions
+#######################
 
-# Adım 1:Aşağıdaki gibi sepet, hizmet pivot table’i oluşturunuz
+# Step 1: Create the basket and service pivot table as below
 
-# Hizmet        0_8   10_9   11_11   12_7   13_11   14_7..
-# SepetID
-# 0_2017-08      0     0       0      0       0       0..
-# 0_2017-09      0     0       0      0       0       0..
-# 0_2018-01      0     0       0      0       0       0..
-# 0_2018-04      0     0       0      0       0       1..
-# 10000_2017-08  0     0       0      0       0       0
+# Service 0_8 10_9 11_11 12_7 13_11 14_7..
+# CartID
+# 0_2017-08 0 0 0 0 0 0..
+# 0_2017-09 0 0 0 0 0 0..
+# 0_2018-01 0 0 0 0 0 0..
+# 0_2018-04 0 0 0 0 0 1..
+# 10000_2017-08 0 0 0 0 0 0
 
-invoice_product_df=df.groupby(["SepetID", "Hizmet"])["Hizmet"].count().unstack().fillna(0).applymap(lambda x:1 if x> 0 else 0)
+invoice_product_df=df.groupby(["CartID", "Service"])["Service"].count().unstack().fillna(0).applymap(lambda x:1 if x> 0 else 0)
 
-# Adım 2: Birliktelik kurallarını oluşturunuz.
+# Step 2: Create association rules.
 
 frequent_itemsets=apriori(invoice_product_df, min_support=0.01, use_colnames=True)
 rules=association_rules(frequent_itemsets, metric="support", min_threshold=0.01)
 rules.head()
 
-# Adım 3: arl_recommender fonksiyonunu kullanarak son 1 ay içerisinde 2_0 hizmetini alan bir kullanıcıya hizmet önerisinde bulununuz.
+# Step 3: Use the arl_recommender function to recommend a service to a user who has received the 2_0 service in the last month.
 
 def arl_recommender(rules_df, product_id, rec_count=1):
     sorted_rules = rules_df.sort_values("lift", ascending=False)

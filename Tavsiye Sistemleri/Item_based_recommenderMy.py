@@ -1,51 +1,51 @@
-###########################################
+#######################
 # Item-Based Collaborative Filtering
-###########################################
+#######################
 
-# Veri seti: https://grouplens.org/datasets/movielens/
+# Dataset: https://grouplens.org/datasets/movielens/
 
-# Adım 1: Veri Setinin Hazırlanması
-# Adım 2: User Movie Df'inin Oluşturulması
-# Adım 3: Item-Based Film Önerilerinin Yapılması
-# Adım 4: Çalışma Scriptinin Hazırlanması
+# Step 1: Preparing the Data Set
+# Step 2: Creating User Movie Df
+# Step 3: Making Item-Based Movie Recommendations
+# Step 4: Preparing the Working Script
 
-######################################
-# Adım 1: Veri Setinin Hazırlanması
-######################################
+#######################
+# Step 1: Preparing the Data Set
+#######################
 import pandas as pd
 pd.set_option('display.max_columns', 20)
-movie = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/movie.csv')
-rating = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/rating.csv')
+movie = pd.read_csv('Recommendation Systems/datasets/movie_lens_dataset/movie.csv')
+rating = pd.read_csv('Recommendation Systems/datasets/movie_lens_dataset/rating.csv')
 
-# MoveId ye göre iki csv dosyasını birleştiriyoruz.
+# We merge two csv files according to MoveId.
 df = movie.merge(rating, how="left", on="movieId")
 df.head()
 
-######################################
-# Adım 2: User Movie Df'inin Oluşturulması
-######################################
+#######################
+# Step 2: Creating User Movie Df
+#######################
 
-# Genel problem matristeki seyreklik durumudur.
+# The general problem is sparsity in the matrix.
 
 df.head()
 df.shape
 
-# Eşssiz kaç film var
+# How many unique movies are there
 df["title"].nunique()
 
-# Hangi film kaç rate aldığına erişelim
+# Let's see which movie has what rate
 df["title"].value_counts().head()
 
-# Value counts df ye cevırelım
+# Let's convert value counts to df
 comment_counts= pd.DataFrame(df["title"].value_counts())
 
-# Belirli bir sayıdan az olan filmleri önce bir gidelim
+# Let's see the movies that are less than a certain number first.
 comment_counts[comment_counts["title"] <= 1000]
 
-# Buradaki isimlere ulaşmak için ise
+# To access the names here
 rare_movies=comment_counts[comment_counts["title"] <= 1000].index
 
-# Buradaki az rate alan filmelrden kurtulmak için bu isimlerin olmadıgı title gelmesi lazım
+# In order to get rid of the low rated movies here, there should be a title that does not contain these names.
 
 common_movies= df[~df["title"].isin(rare_movies)]
 
@@ -54,65 +54,65 @@ common_movies.shape
 common_movies["title"].nunique()
 df["title"].nunique()
 
-# Indırgeme işlemi tamamlandı ve 1000 den fazla rate almıs fılmler elımızde.
-# Satırlarda kullanıcılar sutunlarda ise title olsun.
+# The reduction process has been completed and we have movies that have received more than 1000 ratings.
+# Let users be in the rows and titles in the columns.
 
 user_movie_df= common_movies.pivot_table(index=["userId"], columns=["title"], values="rating")
 
 user_movie_df.shape
 user_movie_df.columns
 
-######################################
-# Adım 3: Item-Based Film Önerilerinin Yapılması
-######################################
+#######################
+# Step 3: Making Item-Based Movie Recommendations
+#######################
 pd.set_option('display.max_columns', 500)
 
 movie_name= "Matrix, The (1999)"
 movie_name= user_movie_df[movie_name]
 
-# Korelasyon formulu kullanıyoruz
+# We use correlation formula
 user_movie_df.corrwith(movie_name).sort_values(ascending=False).head(10)
 
-# Başka bir film için deneyelim
+# Let's try for another movie
 movie_name= "Ocean's Twelve (2004)"
 movie_name= user_movie_df[movie_name]
 user_movie_df.corrwith(movie_name).sort_values(ascending=False).head(10)
 
-# Rastgele filmler seçerek erişmek
+# Access by selecting random movies
 movie_name = pd.Series(user_movie_df.columns).sample(1).values[0]
 movie_name= user_movie_df[movie_name]
 user_movie_df.corrwith(movie_name).sort_values(ascending=False).head(10)
 
-# Rastgele fılm secenekleri Fonksiyonlaşması;
-def check_film(keyword, user_movie_df):
-    return[col for col in user_movie_df.columns if keyword in col]
+# Random movie options Functionality;
+def check_movie(keyword, user_movie_df):
+     return[col for col in user_movie_df.columns if keyword in col]
 
 check_film("Sherlock", user_movie_df)
 check_film("Insomnia", user_movie_df)
 
-######################################
-# Adım 4: Çalışma Scriptinin Hazırlanması
-######################################
+#######################
+# Step 4: Preparing the Working Script
+#######################
 
 def create_user_movie_df():
-    import pandas as pd
-    movie = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/movie.csv')
-    rating = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/rating.csv')
-    df = movie.merge(rating, how="left", on="movieId")
-    comment_counts = pd.DataFrame(df["title"].value_counts())
-    rare_movies = comment_counts[comment_counts["title"] <= 1000].index
-    common_movies = df[~df["title"].isin(rare_movies)]
-    user_movie_df = common_movies.pivot_table(index=["userId"], columns=["title"], values="rating")
-    return user_movie_df
+     import pandas as pd
+     movie = pd.read_csv('Recommendation Systems/datasets/movie_lens_dataset/movie.csv')
+     rating = pd.read_csv('Recommendation Systems/datasets/movie_lens_dataset/rating.csv')
+     df = movie.merge(rating, how="left", on="movieId")
+     comment_counts = pd.DataFrame(df["title"].value_counts())
+     rare_movies = comment_counts[comment_counts["title"] <= 1000].index
+     common_movies = df[~df["title"].isin(rare_movies)]
+     user_movie_df = common_movies.pivot_table(index=["userId"], columns=["title"], values="rating")
+     return user_movie_df
 
 user_movie_df = create_user_movie_df()
 
 
 def item_based_recommender(movie_name, user_movie_df):
-    movie_name = user_movie_df[movie_name]
-    return user_movie_df.corrwith(movie_name).sort_values(ascending=False).head(10)
+     movie_name = user_movie_df[movie_name]
+     return user_movie_df.corrwith(movie_name).sort_values(ascending=False).head(10)
 
-item_based_recommender("Matrix, The (1999)", user_movie_df)
+item_based_recommender("The Matrix, The (1999)", user_movie_df)
 
 movie_name = pd.Series(user_movie_df.columns).sample(1).values[0]
 

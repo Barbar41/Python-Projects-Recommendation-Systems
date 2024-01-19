@@ -1,19 +1,19 @@
-#############################
-# Content Based Recommendation (İçerik Temelli Tavsiye)
-#############################
+##############################
+# Content Based Recommendation
+#################
 
-#############################
-# Film Overview'larına Göre Tavsiye Geliştirme
-#############################
+#################
+# Developing Recommendations Based on Movie Reviews
+#################
 
-# 1. TF-IDF Matrisinin Oluşturulması
-# 2. Cosine Similarity Matrisinin Oluşturulması
-# 3. Benzerliklere Göre Önerilerin Yapılması
-# 4. Çalışma Scriptinin Hazırlanması
+#1. Creating the TF-IDF Matrix
+#2. Creating the Cosine Similarity Matrix
+#3. Making Suggestions Based on Similarities
+# 4. Preparation of Working Script
 
-#################################
-# 1. TF-IDF Matrisinin Oluşturulması
-#################################
+####################
+#1. Creating the TF-IDF Matrix
+####################
 
 
 import pandas as pd
@@ -24,105 +24,105 @@ pd.set_option('display.expand_frame_repr', 100)
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-df = pd.read_csv(r"C:\Users\Baris\PycharmProjects\PythonProject2022\Tavsiye Sistemleri\datasets\the_movies_dataset\movies_metadata.csv", low_memory=False ) # DtypeWarning kapamak icin
+df = pd.read_csv(r"C:\Users\Baris\PycharmProjects\PythonProject2022\Recommendation Systems\datasets\the_movies_dataset\movies_metadata.csv", low_memory=False ) # DtypeWarning to turn off.
 df.head()
 df.shape
 
-# Ana odağımız Benzerlik hesapları için overview değişkeni
+# Our main focus is the overview variable for similarity calculations
 df["overview"].head()
 
-# Az önce import edilen metod çağırılıor.
-# Cokfazla bosluk durumun onunce gecmek adına yapılıyor.Ölçüm değeri taşımayan(in,on,and..)
+# The method just imported is being called.
+# Too much space is made to get ahead of the situation. It has no measurement value (in, on, and..).
 tfidf= TfidfVectorizer(stop_words="english")
 
-# "overview" değişkeni içindeki eksikliklerden kurtulalım.
+# Let's get rid of the shortcomings in the "overview" variable.
 
 df[df["overview"].isnull()]
-# Boslukla dolduralım degersızlerı
+# Let's fill the unimportant ones with a space.
 df["overview"]=df["overview"].fillna("")
 
-# Overview dönüşümü
+# Overview transformation
 
 tfidf_matrix= tfidf.fit_transform(df["overview"])
 
 tfidf_matrix.shape
-# satırlarda açıklamalar,sütunlarda eşssiz kelimeler var
+# rows contain descriptions, columns contain unique words
 
-# satırlardakiler film oldugu dogrulaması
+# verification that the lines are movies
 df["title"].shape
 
-# Öyle ise ikisinin kesişiminde ne vardır?tfidf skorları vardır.
+# So what is at the intersection of the two? There are tfidf scores.
 
 tfidf.get_feature_names()
 
-# Filtreleme
+# Filtering
 df = df[~df["title"].duplicated(keep="last")]
 df = df[~df["title"].isna()]
 df = df[~df["overview"].isna()]
 
-# Matrisin hafızadaki boyutunu yarıya indirme
+# Halving the size of the matrix in memory.
 tfidf_matrix = tfidf_matrix.astype(np.float32)
 
-# Kesişimleri ile ilgili erişmek istiyoruz.
+# We want to access their intersections.
 
 tfidf_matrix.toarray()
 
-#################################
-# 2. Cosine Similarity Matrisinin Oluşturulması
-#################################
+####################
+#2. Creating the Cosine Similarity Matrix
+####################
 
 cosine_sim=cosine_similarity(tfidf_matrix, tfidf_matrix)
 
 cosine_sim.shape
 cosine_sim[1]
 
-#################################
-# 3. Benzerliklere Göre Önerilerin Yapılması
-#################################
+####################
+#3. Making Suggestions Based on Similarities
+####################
 
-# Bir pandas serisi oluşturup bu serinin içine filmlerin title yerlestırecegız.
+# We will create a pandas series and place the titles of the movies in this series.
 indices= pd.Series(df.index, index=df["title"])
 
 indices.index.value_counts()
 
-# Önceki filmleri ucuruyoruz.Coklama isimlerin en sonundakini alacagız.En son cekılen fılmı ıstıyoruz.Çoklama Kayıtlardan kurtuluyoruz.
+# We are destroying the previous movies. We will take the last one of the multiplexed names. We want the last movie shot. We are getting rid of the multiplexed records.
 indices=indices[~indices.index.duplicated(keep="last")]
 
 indices["Cinderella"]
 
 indices["Sherlock Holmes"]
 
-# Bir film indexini tutalım
+# Let's keep a movie index
 movie_index=indices["Sherlock Holmes"]
 
 cosine_sim[movie_index]
 
-# Sherlock Holmes filmi ile elimdeki filmlerin benzerlik skorlarını çıkardık.Ve Database a yerlestırıdk.
+# We calculated the similarity scores of the Sherlock Holmes movie and the movies I had. And placed them in the Database.
 similarity_scores=pd.DataFrame(cosine_sim[movie_index],
-                               columns=["Score"])
+                                columns=["Score"])
 
-# En yüksek skora sahip 10 filmi getirmek istersek
+# If we want to bring the 10 movies with the highest score
 movie_indices= similarity_scores.sort_values("Score",
-                                             ascending=False)[1:11].index
+                                              ascending=False)[1:11].index
 
-# Filmlerin isimlerine gitmek istiyorum.
+# I want to go to the names of the movies.
 df["title"].iloc[movie_indices]
 
-#################################
-# 4. Çalışma Scriptinin Hazırlanması
-#################################
+####################
+# 4. Preparation of Working Script
+####################
 
 def content_based_recommender(title, cosine_sim, dataframe):
-    # index'leri olusturma
-    indices = pd.Series(dataframe.index, index=dataframe['title'])
-    indices = indices[~indices.index.duplicated(keep='last')]
-    # title'ın index'ini yakalama
-    movie_index = indices[title]
-    # title'a gore benzerlik skorlarını hesaplama
-    similarity_scores = pd.DataFrame(cosine_sim[movie_index], columns=["score"])
-    # kendisi haric ilk 10 filmi getirme
-    movie_indices = similarity_scores.sort_values("score", ascending=False)[1:11].index
-    return dataframe['title'].iloc[movie_indices]
+     # create indexes
+     indices = pd.Series(dataframe.index, index=dataframe['title'])
+     indices = indices[~indices.index.duplicated(keep='last')]
+     # Capture title's index
+     movie_index = indices[title]
+     # calculate similarity scores based on title
+     similarity_scores = pd.DataFrame(cosine_sim[movie_index], columns=["score"])
+     # don't bring the top 10 movies except himself
+     movie_indices = similarity_scores.sort_values("score", ascending=False)[1:11].index
+     return dataframe['title'].iloc[movie_indices]
 
 content_based_recommender("Sherlock Holmes",cosine_sim,df)
 
@@ -133,10 +133,10 @@ content_based_recommender("The Dark Knight Rises",cosine_sim,df)
 content_based_recommender("The Godfather",cosine_sim,df)
 
 def calculate_cosine_sim(dataframe):
-    tfidf = TfidfVectorizer(stop_words='english')
-    dataframe['overview'] = dataframe['overview'].fillna('')
-    tfidf_matrix = tfidf.fit_transform(dataframe['overview'])
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-    return cosine_sim
+     tfidf = TfidfVectorizer(stop_words='english')
+     dataframe['overview'] = dataframe['overview'].fillna('')
+     tfidf_matrix = tfidf.fit_transform(dataframe['overview'])
+     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+     return cosine_sim
 
 cosine_sim = calculate_cosine_sim(df)

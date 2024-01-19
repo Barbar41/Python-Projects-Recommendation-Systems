@@ -1,59 +1,59 @@
-#### ASSOCIATION RULE LEARNING(BİRLİKTELİK KURALI ÖĞRENİMİ)
+#### ASSOCIATION RULE LEARNING
 
-1-Veri Ön İşleme
+1-Data Preprocessing
 
-2-ARL Veri Yapısını Hazırlama (Invoice-Product Matrix)
+2-Preparing the ARL Data Structure (Invoice-Product Matrix)
 
-3-Birliktelik Kurallarının Çıkarılması
+3-Issuing Association Rules
 
-4-Çalışmanın Scriptini Hazırlama
+4-Preparing the Script of the Study
 
-5-Sepet Aşamasındaki Kullanıcılara Ürün Önerisinde Bulunmak
+5-Making Product Recommendations to Users in the Basket Stage
 
-#############################
-#### CONTENT BASED RECOMMENDATION (İçerik Temelli Tavsiye)
+#################
+#### CONTENT BASED RECOMMENDATION
 
-1-TF-IDF Matrisinin Oluşturulması
+1-Creation of TF-IDF Matrix
 
-2-Cosine Similarity Matrisinin Oluşturulması
+2-Creating the Cosine Similarity Matrix
 
-3-Benzerliklere Göre Önerilerin Yapılması
+3-Making Suggestions Based on Similarities
 
-4-Çalışma Scriptinin Hazırlanması
+4-Preparation of Working Script
 
-#############################
+#################
 #### MODEL-BASED COLLABORATIVE FILTERING-MATRIX FACTORIZATION
 
-1-Veri Setinin Hazırlanması
+1-Preparation of Data Set
 
-2-Modelleme
+2-Modelling
 
 3-Model Tuning
 
-4-Final Model ve Tahmin
+4-Final Model and Prediction
 
-###########################################
+#######################
 #### ITEM-BASED COLLABORATIVE FILTERING
 
-1-Veri Setinin Hazırlanması
+1-Preparation of Data Set
 
-2-User Movie Df'inin Oluşturulması
+2-Creating User Movie Df
 
-3-Item-Based Film Önerilerinin Yapılması
+3-Making Item-Based Movie Suggestions
 
-4-Çalışma Scriptinin Hazırlanması
+4-Preparation of Working Script
 
-############################################
+#######################
 #### USER-BASED COLLABORATIVE FILTERING
 
-1-Veri Setinin Hazırlanması
+1-Preparation of Data Set
 
-2-Öneri Yapılacak Kullanıcının İzlediği Filmlerin Belirlenmesi
+2-Determining the Movies Watched by the User to Make Recommendations
 
-3-Aynı Filmleri İzleyen Diğer Kullanıcıların Verisine ve Id'lerine Erişmek
+3-Accessing the Data and IDs of Other Users Watching the Same Movies
 
-4-Öneri Yapılacak Kullanıcı ile En Benzer Davranışlı Kullanıcıların Belirlenmesi
+4-Determining the Users with the Most Similar Behavior to the User to be Recommended
 
-5-Weighted Average Recommendation Score'un Hesaplanması
+5-Calculation of Weighted Average Recommendation Score
 
-6-Çalışmanın Fonksiyonlaştırılması
+6-Functionalization of the Work
