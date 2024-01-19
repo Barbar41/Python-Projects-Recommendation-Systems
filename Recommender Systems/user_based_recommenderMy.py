@@ -224,7 +224,7 @@ def user_based_recommender(random_user, user_movie_df, ratio=60, cor_th=0.65, sc
     recommendation_df = recommendation_df.reset_index()
 
     movies_to_be_recommend = recommendation_df[recommendation_df["weighted_rating"] > score].sort_values("weighted_rating", ascending=False)
-    movie = pd.read_csv('Tavsiye Sistemleri/datasets/movie_lens_dataset/movie.csv')
+    movie = pd.read_csv('Recommender Systems/datasets/movie_lens_dataset/movie.csv')
     return movies_to_be_recommend.merge(movie[["movieId", "title"]])
 
 
